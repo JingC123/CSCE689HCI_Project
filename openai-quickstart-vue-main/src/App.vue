@@ -1,80 +1,58 @@
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 
 const content = ref('')
 const BTN_TEXT = 'Submit 🚀'
-const res = ref('✅ The answer will be displayed here.')
+const res = ref('✅ The process will be displayed here.')
 const btnText = ref(BTN_TEXT)
 
-async function createCompletionsChat() {
+const searchImage = async () => {
   try {
-    btnText.value = 'Thinking...🤔'
-
-    const userMessages = [{ role: 'user', content: content.value }]
-
-    const requestData = JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: userMessages,
-      stream: true,
-    })
-
-    const fetchOptions = {
+    btnText.value = 'Searching...🔍'
+    
+    const response = await fetch('http://127.0.0.1:5000/search', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${import.meta.env.VITE_OPEN_API_KEY}`,
+        'Content-Type': 'application/json'
       },
-      body: requestData,
-    }
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', fetchOptions)
-    const reader = response.body.getReader()
-    res.value = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      const chunkStr = new TextDecoder('utf-8').decode(value)
-      const lines = chunkStr
-        .split('\n')
-        .filter((line) => line !== '' && line.length > 0)
-        .map((line) => line.replace(/^data: /, '').trim())
-        .filter((line) => line !== '[DONE]')
-        .map((line) => JSON.parse(line))
-      for (const line of lines) {
-        const {
-          choices: [
-            {
-              delta: { content },
-            },
-          ],
-        } = line
-        if (content) {
-          res.value += content
-        }
-      }
-    }
-    console.log('Stream ended.')
+      body: JSON.stringify({ desc: content.value })
+    })
+    
+    const data = await response.json()
+    photos.value = data.photos
+    
   } catch (error) {
     console.error(error)
-    res.value = error.response.data.error.message
+    res.value = 'Error occurred while searching.'
   } finally {
     btnText.value = BTN_TEXT
   }
 }
 
-const askAi = () => {
-  createCompletionsChat()
+const photos = ref([])
+
+const loadPhotos = async () => {
+  try {
+    const response = await fetch(`http://127.0.0.1:5000/photos`)
+    const data = await response.json()
+    photos.value = data.photos
+  } catch (error) {
+    console.error(error)
+  }
 }
+
+onMounted(() => {
+  // Load photos when the component is mounted
+  loadPhotos()
+})
 </script>
 
 <template>
-  <h2>🤖️ My ChatGPT</h2>
+  <h2>🤖️ My Smart Gallery</h2>
   <div class="chat">
-    <input class="input" placeholder="Ask me about...🌽" v-model="content" clear />
+    <input class="input" placeholder="Find photo for me...🌽" v-model="content" clear />
     <div class="button-block">
-      <button type="button" @click="askAi" class="btn">
+      <button type="button" @click="searchImage" class="btn">
         <strong>{{ btnText }}</strong>
         <div id="container-stars">
           <div id="stars"></div>
@@ -87,6 +65,11 @@ const askAi = () => {
     </div>
     <div class="card">
       <pre>{{ res }}</pre>
+    </div>
+    <div class="gallery">
+      <div v-for="(photo, index) in photos" :key="index" class="photo-item">
+        <img :src="photo" alt="Photo" class="photo" />
+      </div>
     </div>
   </div>
 </template>
@@ -371,5 +354,27 @@ strong {
     transform: scale(0.75);
     box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
   }
+}
+
+.input-container {
+  margin-bottom: 20px;
+}
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.photo-item {
+  margin: 10px;
+}
+
+.photo {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>
