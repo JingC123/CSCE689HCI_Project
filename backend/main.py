@@ -7,8 +7,8 @@ import requests
 import json
 # Load environment variables
 version = "?api-version=2023-02-01-preview&modelVersion=latest"
-endpoint = "modify to your endpoint"
-key = "modify to your key"
+endpoint = "https://jingcao.cognitiveservices.azure.com/computervision/"
+key = "d202a3611e1a467cba079ce31408d786"
 
 def get_image_embedding(image):
     with open(image, "rb") as img:
@@ -87,13 +87,16 @@ def generate_image_vals(text_vector):
     for filename in os.listdir("photos"):
         img_filename = "photos/" + filename
         image_vector = get_image_embedding(img_filename)
-        # similarity = get_cosine_similarity(image_vector, text_vector)
-        img_vectors.append((img_filename))
+        similarity = get_cosine_similarity(image_vector, text_vector)
+        img_vectors.append((img_filename, similarity))
     return img_vectors
 
 def get_most_k_filenames(prompt, k):
     sorted_img = sorted(generate_image_vals(get_text_embedding(prompt)), key=lambda x: x[1], reverse=True)
-    return sorted_img[:k]
+    result = []
+    for img in sorted_img:
+        result.append(img[0])
+    return result[:k]
 
 
 app = Flask(__name__)
