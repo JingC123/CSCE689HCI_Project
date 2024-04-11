@@ -105,6 +105,7 @@ def searchImage():
     description = data['desc']
     return jsonify({'photos': get_most_k_filenames(description, 3)}) 
 
+
 @app.route('/photos')
 def get_photos():
     folder_path = 'photos'
