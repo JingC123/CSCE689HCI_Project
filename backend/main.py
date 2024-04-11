@@ -7,8 +7,8 @@ import requests
 import json
 # Load environment variables
 version = "?api-version=2023-02-01-preview&modelVersion=latest"
-endpoint = "https://jingcao.cognitiveservices.azure.com/computervision/"
-key = "d202a3611e1a467cba079ce31408d786"
+endpoint = "modify to your endpoint"
+key = "modify to your key"
 
 def get_image_embedding(image):
     with open(image, "rb") as img:
@@ -104,6 +104,7 @@ def searchImage():
     data = json.loads(request.data)
     description = data['desc']
     return jsonify({'photos': get_most_k_filenames(description, 3)}) 
+
 
 @app.route('/photos')
 def get_photos():
