@@ -1,6 +1,4 @@
-# openai-quickstart-vue
-
-This is a quickstart template for using OpenAI's GPT-3 API in Vue 3.
+This is our front end code in Vue 3.
 
 ![image](./assets/preview.png)
 
