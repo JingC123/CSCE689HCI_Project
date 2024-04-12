@@ -9,8 +9,8 @@ This is a quickstart template for using OpenAI's GPT-3 API in Vue 3.
 1. Clone this repository and navigate into the project directory
 
     ```shell
-    git clone https://github.com/ysfscream/openai-quickstart-vue.git
-    cd openai-quickstart-vue
+    git clone https://github.com/JingC123/CSCE689HCI_Project.git
+    cd frontend
     ```
 
 2. Using `pnpm` to install dependencies
