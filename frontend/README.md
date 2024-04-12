@@ -1,6 +1,6 @@
 This is our front end code in Vue 3.
 
-![image](./assets/preview.png)
+![image](./assets/preview1.png)
 
 ## Setup
 
