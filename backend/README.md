@@ -1,7 +1,6 @@
 
 This is our python backend code in Flask.
 
-![image](./assets/preview.png)
 
 ## Setup
 
