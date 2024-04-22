@@ -10,6 +10,7 @@ version = "?api-version=2023-02-01-preview&modelVersion=latest"
 endpoint = ""
 key = ""
 
+
 def get_image_embedding(image):
     with open(image, "rb") as img:
         data = img.read()

@@ -3,19 +3,22 @@ import { ref, nextTick, onMounted } from 'vue'
 
 const content = ref('')
 const BTN_TEXT = 'Submit 🚀'
-const res = ref('✅ The process will be displayed here.')
+const res = ref('🔍 Ask me any pictures you want to find!')
 const btnText = ref(BTN_TEXT)
+const keyword = ref('')
 
 const searchImage = async () => {
   try {
     btnText.value = 'Searching...🔍'
+    res.value = `💪🏻💪🏻 Now, I will use keyword ❗${keyword.value.toUpperCase()}❗ to search photos...`
+    photos.value = []
     
     const response = await fetch('http://127.0.0.1:5000/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ desc: content.value })
+      body: JSON.stringify({ desc: keyword.value })
     })
     
     const data = await response.json()
@@ -23,10 +26,81 @@ const searchImage = async () => {
     
   } catch (error) {
     console.error(error)
-    res.value = 'Error occurred while searching.'
+    res.value = '❌ Error occurred while searching.'
   } finally {
     btnText.value = BTN_TEXT
+    res.value = `❗ Keyword: ${keyword.value.toUpperCase()}
+✅ The results are displayed here.`
   }
+}
+
+function sleep(milliseconds) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+const searchKeyword = async () => {
+  btnText.value = 'Summarizing... 🔍'
+  res.value = '💪🏻💪🏻 First, I will summary a keyword for you, give me a second...'
+  photos.value = []
+
+  const userMessages = [
+    { role: 'system', content: `Task: Extract a single keyword(which must be a place or a item) that best summarizes the essence of the given description. The keyword should be a succinct representation of the main theme or subject mentioned in the description.
+
+Example:
+Description: where I work in it regularly
+Your answer should be office
+
+Now, based on the user's input description, provide a keyword.`},
+    { role: 'user', content: content.value }
+  ]
+  const requestData = JSON.stringify({
+    model: 'gpt-3.5-turbo',
+    messages: userMessages,
+    stream: true,
+  })
+
+  const fetchOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${import.meta.env.VITE_OPEN_API_KEY}`,
+    },
+    body: requestData,
+  }
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', fetchOptions)
+  const reader = response.body.getReader()
+  await sleep(1500)
+  res.value = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    const chunkStr = new TextDecoder('utf-8').decode(value)
+    const lines = chunkStr
+      .split('\n')
+      .filter((line) => line !== '' && line.length > 0)
+      .map((line) => line.replace(/^data: /, '').trim())
+      .filter((line) => line !== '[DONE]')
+      .map((line) => JSON.parse(line))
+    for (const line of lines) {
+      const {
+        choices: [
+          {
+            delta: { content },
+          },
+        ],
+      } = line
+      if (content) {
+        res.value = `✅ Keyword: ❗${content.toUpperCase()}❗`
+        keyword.value = content
+      }
+    }
+  }
+  btnText.value = BTN_TEXT
+  console.log('Stream ended.')
+  await sleep(1500)
+  searchImage()
 }
 
 const photos = ref([])
@@ -52,7 +126,7 @@ onMounted(() => {
   <div class="chat">
     <input class="input" placeholder="Find photo for me...🌽" v-model="content" clear />
     <div class="button-block">
-      <button type="button" @click="searchImage" class="btn">
+      <button type="button" @click="searchKeyword" class="btn">
         <strong>{{ btnText }}</strong>
         <div id="container-stars">
           <div id="stars"></div>
