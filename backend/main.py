@@ -9,6 +9,7 @@ import json
 version = "?api-version=2023-02-01-preview&modelVersion=latest"
 endpoint = ""
 key = ""
+img_map = dict()
 
 
 def get_image_embedding(image):
@@ -83,11 +84,12 @@ def get_cosine_similarity(vector1, vector2):
 # similarity2 = get_cosine_similarity(image_vector2, text_vector)
 # print(similarity2)
 
+
 def generate_image_vals(text_vector):
     img_vectors = []
     for filename in os.listdir("photos"):
         img_filename = "photos/" + filename
-        image_vector = get_image_embedding(img_filename)
+        image_vector = img_map[filename[:-4]]
         similarity = get_cosine_similarity(image_vector, text_vector)
         img_vectors.append((img_filename, similarity))
     return img_vectors
@@ -99,9 +101,17 @@ def get_most_k_filenames(prompt, k):
         result.append(img[0])
     return result[:k]
 
+def generate_image_map():
+    for filename in os.listdir("photos"):
+        img_filename = "photos/" + filename
+        image_vector = get_image_embedding(img_filename)
+        img_map[filename[:-4]]=image_vector
+    return
 
 app = Flask(__name__)
 CORS(app)
+
+
 
 @app.route('/search', methods = ["POST"])
 def searchImage():
@@ -126,5 +136,11 @@ def get_photos():
 
     return jsonify({'photos': photos})
 
+
+# pre load all the picture to cache when server start
+with app.app_context():
+    generate_image_map()
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
+    
